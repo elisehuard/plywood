@@ -1,6 +1,15 @@
-(ns plywood.core)
+(ns plywood.core
+  (:require [clojure.core.matrix.dataset :as ds]
+            [clojure.core.matrix.impl.dataset :as dsi]
+            [clojure.core.matrix :as cm]
+            [clojure.core.reducers :as r]))
 
-(defn foo
-  "I don't do a whole lot."
-  [x]
-  (println x "Hello, World!"))
+(defn filter-dataset
+  "filter rows of a core matrix dataset based on a predicate"
+  [dataset filter-columns filter-fn]
+  (->> dataset
+       (ds/row-maps)
+       (r/filter
+        #(apply filter-fn (vals (select-keys % filter-columns))))
+       (into [])
+       (ds/dataset filter-columns)))
