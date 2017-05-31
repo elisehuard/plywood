@@ -5,7 +5,7 @@
             [clojure.core.reducers :as r]))
 
 (defn filter-dataset
-  "filter rows of a core matrix dataset based on a predicate"
+  "filter rows of a core matrix dataset based on a predicate function"
   [dataset filter-columns filter-fn]
   (->> dataset
        (ds/row-maps)
