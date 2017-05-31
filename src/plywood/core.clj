@@ -7,9 +7,10 @@
 (defn filter-dataset
   "filter rows of a core matrix dataset based on a predicate function"
   [dataset filter-columns filter-fn]
-  (->> dataset
-       (ds/row-maps)
-       (r/filter
-        #(apply filter-fn (vals (select-keys % filter-columns))))
-       (into [])
-       (ds/dataset filter-columns)))
+  (let [all-columns (ds/column-names dataset)]
+    (->> dataset
+         (ds/row-maps)
+         (r/filter
+          #(apply filter-fn (vals (select-keys % filter-columns))))
+         (into [])
+         (ds/dataset all-columns))))

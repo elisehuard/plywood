@@ -13,4 +13,7 @@
   (testing "filter rows of a matrix to see if order is respected"
     (is (.equals (ds/row-maps (filter-dataset test-ds1 [:b :a :c] (fn [b a c]
                                                                     (and (> a b) (not (nil? c))))))
+                 (ds/row-maps (ds/dataset [:a :b :c] [[3 2 "Right"]])))))
+  (testing "filter rows of a matrix to see if order is respected"
+    (is (.equals (ds/row-maps (filter-dataset test-ds1 [:a :b] (fn [a b] (> a b))))
                  (ds/row-maps (ds/dataset [:a :b :c] [[3 2 "Right"]]))))))
