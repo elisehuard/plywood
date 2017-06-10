@@ -59,7 +59,6 @@
         unindexed-cols (remove (set s-columns) (ds/column-names src))
         inverse-indexer (column-values-fn src unindexed-cols)
         dex (build-index src-indexer inverse-indexer src)
-        _ (println dex)
         t-indexer (column-values-fn target t-columns)
         unmatched-index (repeat (count unindexed-cols) empty-cell)]
     (->> target
@@ -68,7 +67,6 @@
           (fn combiner
             ([] [])
             ([l r]
-             (println l r)
              (concat l r)))
           (fn reducer
             ([] [])

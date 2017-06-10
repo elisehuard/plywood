@@ -23,24 +23,35 @@
 (def bigger-dataset (let [csv (read-csv-to-ds (io/resource "test/basic_income_dataset_dalia.csv"))]
                       (d (first csv) (rest csv))))
 
+(defn ds-equals
+  "dataset equality for tests - probably very inefficient"
+  [^clojure.core.matrix.impl.dataset.DataSet ds1 ^clojure.core.matrix.impl.dataset.DataSet ds2]
+  (let [ds2-ordered-by-columns (ds/select-columns ds2 (ds/column-names ds1))]
+    (= (.columns ds1) (.columns ds2-ordered-by-columns))))
+
 (deftest filter-dataset-test
   (testing "filter rows of a matrix where c is nil and a < b"
-    (is (.equals (ds/row-maps (filter-dataset test-ds1 [:a :b :c] (fn [a b c]
-                                                                    (and (> a c) (not (nil? b))))))
-                 (ds/row-maps (ds/dataset [:a :b :c] [[2 "Right" 0]])))))
+    (is (= (ds/row-maps (filter-dataset test-ds1 [:a :b :c] (fn [a b c]
+                                                              (and (> a c) (not (nil? b))))))
+           (ds/row-maps (ds/dataset [:a :b :c] [[2 "Right" 0]])))))
   (testing "filter rows of a matrix to see if order is respected"
-    (is (.equals (ds/row-maps (filter-dataset test-ds1 [:b :a :c] (fn [b a c]
-                                                                    (and (> a c) (not (nil? b))))))
-                 (ds/row-maps (ds/dataset [:a :b :c] [[2 "Right" 0]]))))))
+    (is (= (ds/row-maps (filter-dataset test-ds1 [:b :a :c] (fn [b a c]
+                                                              (and (> a c) (not (nil? b))))))
+           (ds/row-maps (ds/dataset [:a :b :c] [[2 "Right" 0]]))))))
 
-;; TODO: need equality that is independent of row order ...
+;; TODO: need equality that is independent of row order or column order ...
 (deftest join-datasets
   (testing "left join"
-    (is (.equals
+    (is (ds-equals
          (left-join test-ds1 test-ds2 [:a])
          (d [:a :b :c :d :e]
             [[1 "Left" 3 "not" 4]
              [1 "Left" 3 "why" 3]
              [2 "Right" 0 nil nil]
              [4 nil 5 nil nil]]))))
-  )
+  (testing "right join"
+    (is (ds-equals
+         (right-join test-ds1 test-ds2 [:a])
+         (d [:a :b :c :d :e]
+            [[1 "Left" 3 "why" 3]
+             [1 "Left" 3 "not" 4]])))))
