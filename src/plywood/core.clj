@@ -28,13 +28,13 @@
          (zipmap (ds/column-names dataset))
          ds/dataset)))
 
-(defn column-values-fn
+(defn- column-values-fn
   [dataset columns]
   (let [col-indexes (map (partial ds/column-index dataset) columns)]
     (fn [row]
       (map (partial nth row) col-indexes))))
 
-(defn build-index [indexer inverse-indexer dataset]
+(defn- build-index [indexer inverse-indexer dataset]
   (->> dataset
        cm/rows
        (r/fold
@@ -49,7 +49,7 @@
                    (indexer row)
                    #(conj % (inverse-indexer row))))))))
 
-(defn join-
+(defn- join-
   "Right joins the two datasets by the values found in columns, where the left side of the join is target.
   Implementation assumes the cost of converting the left dataset to rows and then using fold to join right, will be
   justified by the size of the data. Potential improve could be to detect the data size and if small perform the join by
@@ -92,5 +92,8 @@
          (if (vector? (first columns)) columns (repeat 2 columns))
          (apply hash-map options)))
 
-(defn full-join
-  [left right columns & options])
+(defn inner-join
+  [left right columns & options]
+  (join- left right
+         (if (vector? (first columns)) columns (repeat 2 columns))
+         (merge (apply hash-map options) {:inner true})))

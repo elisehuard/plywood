@@ -4,7 +4,7 @@ A clojure library intended to bring functionality of [dplyr](https://cran.r-proj
 
 ## Usage
 
-*Filter function*:
+### Filter function
 Takes a vector of columns, and a corresponding filter
 predicate function taking the values of those columns and returning a
 boolean-like.
@@ -13,7 +13,7 @@ boolean-like.
  (filter-dataset test-ds1 ["a" "b" "c"] (fn [a b c] (and (> a b) (not (nil? c)))))
 ```
 
-*Join*:
+### Join
 _left-join_: takes all the rows on the left dataset and attempts to
 match them by the columns on the right dataset. If no match is found
 the row is filled with nils.  If more than one match is found, more
@@ -31,12 +31,12 @@ _right-join_: symmetrical to left-join.
 _inner-join_: if no match is found in the other dataset, the row is
 simply dropped.
 
-_full-join_: all rows of both datasets are present, even when there is
-no match.
 
 ## Roadmap
 
-
+TODO: join on different column names using maps for equality
+group-by - summarize using functions
+order rows defining ordering function
 
 ## Credits
 
