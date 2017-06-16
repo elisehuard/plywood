@@ -27,3 +27,73 @@
                a))))
          (zipmap (ds/column-names dataset))
          ds/dataset)))
+
+(defn- column-values-fn
+  [dataset columns]
+  (let [col-indexes (map (partial ds/column-index dataset) columns)]
+    (fn [row]
+      (map (partial nth row) col-indexes))))
+
+(defn- build-index [indexer inverse-indexer dataset]
+  (->> dataset
+       cm/rows
+       (r/fold
+        (fn combiner
+          ([] {})
+          ([l r]
+           (merge l r)))
+        (fn reducer
+          ([] {})
+          ([a row]
+           (update a
+                   (indexer row)
+                   #(conj % (inverse-indexer row))))))))
+
+(defn- join-
+  "Right joins the two datasets by the values found in columns, where the left side of the join is target.
+  Implementation assumes the cost of converting the left dataset to rows and then using fold to join right, will be
+  justified by the size of the data. Potential improve could be to detect the data size and if small perform the join by
+  creating new columns for the dataset, rather than growing the rows."
+  [target src [t-columns s-columns] {:keys [empty-cell inner] :or {:empty-cell nil :inner false}}]
+  (let [src-indexer (column-values-fn src s-columns)
+        unindexed-cols (remove (set s-columns) (ds/column-names src))
+        inverse-indexer (column-values-fn src unindexed-cols)
+        dex (build-index src-indexer inverse-indexer src)
+        t-indexer (column-values-fn target t-columns)
+        unmatched-index (repeat (count unindexed-cols) empty-cell)]
+    (->> target
+         cm/rows
+         (r/fold
+          (fn combiner
+            ([] [])
+            ([l r]
+             (concat l r)))
+          (fn reducer
+            ([] [])
+            ([a row]
+             (let [matched-index (get dex (t-indexer row))]
+               (if matched-index
+                 (concat a (mapv #(concat row %) matched-index))
+                 (if (not inner)
+                   (concat a [(concat row unmatched-index)])
+                   a))))))
+         (ds/dataset (concat (ds/column-names target)
+                             unindexed-cols)))))
+
+(defn left-join
+  [left right columns & options]
+  (join- left right
+         (if (vector? (first columns)) columns (repeat 2 columns))
+         (apply hash-map options)))
+
+(defn right-join
+  [left right columns & options]
+  (join- right left
+         (if (vector? (first columns)) columns (repeat 2 columns))
+         (apply hash-map options)))
+
+(defn inner-join
+  [left right columns & options]
+  (join- left right
+         (if (vector? (first columns)) columns (repeat 2 columns))
+         (merge (apply hash-map options) {:inner true})))
